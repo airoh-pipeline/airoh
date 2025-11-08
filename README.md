@@ -1,6 +1,6 @@
 _Because reproducible science takes clean tasks. And why don't you have a cup of relaxing jasmin tea?_
 
-**airoh** is a lightweight Python task library built with [`invoke`](https://www.pyinvoke.org/), designed for reproducible research workflows. It provides pre-written, modular task definitions that can be easily reused in your own `tasks.py` file — no boilerplate, just useful automation.
+**airoh** is a lightweight Python task library built with [`invoke`](https://www.pyinvoke.org/), designed for reproducible research workflows. It provides pre-written, modular task definitions that can be easily reused in your own `tasks.py` file — no boilerplate, just useful automation. Access the documentation of the library on the [airoh docs website](https://airoh-pipeline.github.io/airoh/airoh.html) for a list of available airoh tasks. 
 
 ## Installation
 Installation through PIP:
@@ -33,32 +33,6 @@ Now you can call:
 invoke run-figures
 invoke setup-env-python
 ```
-
-## Available Tasks
-
-### From `containers.py`
-
-* `docker-build` — Build a Docker image from a Dockerfile
-* `docker-archive` — Archive the Docker image to `.tar.gz`
-* `docker-setup` — Download and load a Docker image from URL
-* `docker-run` — Run an `invoke` task inside Docker
-* `apptainer-archive` — Build an Apptainer image from Docker
-* `apptainer-run` — Run an `invoke` task inside Apptainer
-
-### From `utils.py`
-
-* `ensure_submodule` — Ensure a git submodule is present and up to date
-* `install_local` — Install a local Python package in editable mode using pip
-* `setup-env-python` — Install Python dependencies from a file
-* `run-figures` — Run Jupyter notebooks to generate figures
-* `ensure-dir-exist`: Creates a directory listed in `invoke.yaml` if it doesn't already exist.
-* `clean_folder` — Remove an entire directory recursively. Use with caution!!!
-
-### From `datalad.py`
-* `get-data` — Install and retrieve a subdataset listed in `invoke.yaml`
-* `import-archive` — Download a remote archive (e.g. from Zenodo), extract its contents with `datalad`, and optionally drop the original file
-* `import-file` — Download a remote file (e.g. from Zenodo), using `datalad`
-
 ## Requirements
 
 * Python ≥ 3.8
