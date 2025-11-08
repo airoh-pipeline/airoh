@@ -7,8 +7,27 @@ from pathlib import Path
 from invoke import task
 
 def _set_image(c, image=None):
-    """
-    Resolve the Docker image name from parameter or invoke.yaml.
+    """🧩 Resolve the Docker image name.
+
+    Retrieves the Docker image name either from the argument or from
+    the `docker_image` key in `invoke.yaml`.
+
+    Parameters
+    ----------
+    c : invoke.Context
+        The Invoke context.
+    image : str, optional
+        The Docker image name override.
+
+    Returns
+    -------
+    str
+        The resolved Docker image name.
+
+    Raises
+    ------
+    ValueError
+        If the image name cannot be determined.
     """
     image = image or c.config.get("docker_image")
     if not image:
@@ -17,18 +36,50 @@ def _set_image(c, image=None):
 
 @task
 def docker_build(c, image=None, no_cache=False):
-    """
-    Build the Docker image from the Dockerfile in the project root.
+    """🐳 Build a Docker image for the project.
+
+    Builds the Docker image defined by the Dockerfile in the project root.
+
+    Parameters
+    ----------
+    c : invoke.Context
+        The Invoke context.
+    image : str, optional
+        The name of the Docker image. Defaults to the one in `invoke.yaml`.
+    no_cache : bool, optional
+        Disable Docker layer caching (default: False).
+
+    Examples
+    --------
+    ```bash
+    inv containers.docker-build
+    inv containers.docker-build --no-cache
+    ```
     """
     image = _set_image(c, image)
-    cache_flag = "--no-cache" if no_cache else "" 
+    cache_flag = "--no-cache" if no_cache else ""
     print(f"🐳 Building Docker image: {image}")
     c.run(f"docker build {cache_flag} -t {image} .")
 
 @task
 def docker_archive(c, image=None):
-    """
-    Save the Docker image to a compressed archive for Zenodo or transport.
+    """📦 Save the Docker image to a compressed archive.
+
+    Creates a `.tar.gz` file from a Docker image, suitable for archiving
+    or uploading to platforms such as Zenodo.
+
+    Parameters
+    ----------
+    c : invoke.Context
+        The Invoke context.
+    image : str, optional
+        The Docker image name. Defaults to the one in `invoke.yaml`.
+
+    Examples
+    --------
+    ```bash
+    inv containers.docker-archive
+    ```
     """
     image = _set_image(c, image)
     output = f"{image}.tar.gz"
@@ -38,8 +89,25 @@ def docker_archive(c, image=None):
 
 @task
 def docker_setup(c, url=None, image=None):
-    """
-    Download and load the prebuilt Docker image from Zenodo.
+    """📥 Download and load a prebuilt Docker image.
+
+    Retrieves a prebuilt Docker archive from a remote URL and loads it
+    into the local Docker daemon.
+
+    Parameters
+    ----------
+    c : invoke.Context
+        The Invoke context.
+    url : str, optional
+        The URL to download the image from. Defaults to `docker_archive` in `invoke.yaml`.
+    image : str, optional
+        The Docker image name. Defaults to the one in `invoke.yaml`.
+
+    Examples
+    --------
+    ```bash
+    inv containers.docker-setup --url https://zenodo.org/.../image.tar.gz
+    ```
     """
     image = _set_image(c, image)
     if not url:
@@ -59,8 +127,28 @@ def docker_setup(c, url=None, image=None):
     print("✨ Container setup complete.")
 
 def _ensure_docker_image_loaded(c, image, image_tar):
-    """
-    Ensure the specified Docker image is available. If not, try to load it from a .tar or .tar.gz.
+    """🧠 Ensure a Docker image is available locally.
+
+    If the image is not found, it attempts to load it from the specified `.tar`
+    or `.tar.gz` archive.
+
+    Parameters
+    ----------
+    c : invoke.Context
+        The Invoke context.
+    image : str
+        The name of the Docker image.
+    image_tar : str or Path
+        The path to the image archive file.
+
+    Raises
+    ------
+    RuntimeError
+        If Docker is not installed.
+    FileNotFoundError
+        If the archive file is missing.
+    ValueError
+        If the archive format is unsupported.
     """
     if not shutil.which("docker"):
         raise RuntimeError("❌ Docker is not installed or not in PATH. Please install Docker.")
@@ -93,12 +181,24 @@ def _ensure_docker_image_loaded(c, image, image_tar):
 
 @task
 def docker_run(c, task, args=""):
-    """
-    Run an invoke task inside the Docker container.
+    """🚀 Run an Invoke task inside the Docker container.
 
-    Args:
-        task (str): the invoke task to run
-        args (str): any additional CLI args to pass to the task
+    Executes a given Invoke task within the project's Docker image.
+
+    Parameters
+    ----------
+    c : invoke.Context
+        The Invoke context.
+    task : str
+        The Invoke task name to run inside the container.
+    args : str, optional
+        Additional CLI arguments to forward.
+
+    Examples
+    --------
+    ```bash
+    inv containers.docker-run --task datalad.get-data --args "--name image10k"
+    ```
     """
     image = c.config.get("docker_image")
     image_tar = f"{image}.tar.gz"
@@ -115,9 +215,27 @@ def docker_run(c, task, args=""):
 
 @task
 def apptainer_archive(c, image=None):
-    """
-    Archive the Apptainer (Singularity) image from a Docker image using Docker daemon.
-    Builds the .sif file if not present.
+    """🧪 Build and archive an Apptainer (Singularity) image.
+
+    Converts a Docker image into an Apptainer `.sif` container file.
+
+    Parameters
+    ----------
+    c : invoke.Context
+        The Invoke context.
+    image : str, optional
+        The Docker image name. Defaults to `docker_image` in `invoke.yaml`.
+
+    Raises
+    ------
+    RuntimeError
+        If Docker or Apptainer is not installed.
+
+    Examples
+    --------
+    ```bash
+    inv containers.apptainer-archive
+    ```
     """
     image = _set_image(c, image)
     sif_path = Path(f"{image}.sif")
@@ -139,12 +257,25 @@ def apptainer_archive(c, image=None):
 
 @task
 def apptainer_run(c, task, args=""):
-    """
-    Run an invoke task inside the Apptainer container.
+    """🧬 Run an Invoke task inside the Apptainer container.
 
-    Args:
-        task (str): the invoke task to run
-        args (str): any additional CLI args to pass to the task
+    Executes a given Invoke task inside the Apptainer image, providing a
+    reproducible environment for execution.
+
+    Parameters
+    ----------
+    c : invoke.Context
+        The Invoke context.
+    task : str
+        The Invoke task to run.
+    args : str, optional
+        Additional arguments to pass to the task.
+
+    Examples
+    --------
+    ```bash
+    inv containers.apptainer-run --task datalad.import-file --args "--name stimuli"
+    ```
     """
     docker_image = c.config.get("docker_image")
     sif_path = Path(f"{docker_image}.sif")

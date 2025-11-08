@@ -1,4 +1,3 @@
-# airoh
 _Because reproducible science takes clean tasks. And why don't you have a cup of relaxing jasmin tea?_
 
 **airoh** is a lightweight Python task library built with [`invoke`](https://www.pyinvoke.org/), designed for reproducible research workflows. It provides pre-written, modular task definitions that can be easily reused in your own `tasks.py` file — no boilerplate, just useful automation.
@@ -49,7 +48,7 @@ invoke setup-env-python
 ### From `utils.py`
 
 * `ensure_submodule` — Ensure a git submodule is present and up to date
-* `install_local` — Install a local Python package in editable mode using pip 
+* `install_local` — Install a local Python package in editable mode using pip
 * `setup-env-python` — Install Python dependencies from a file
 * `run-figures` — Run Jupyter notebooks to generate figures
 * `ensure-dir-exist`: Creates a directory listed in `invoke.yaml` if it doesn't already exist.
@@ -68,10 +67,12 @@ invoke setup-env-python
 * Apptainer (optional, for `.sif` support)
 * `jupyter` (if using `run-figures`)
 
+Note that a few more requirements are required for development, in particular [pdoc](https://pdoc.dev/docs/pdoc.html) which is used to generate the documentation website.
+
 ## Philosophy
 
 Inspired by Uncle Iroh from *Avatar: The Last Airbender*, `airoh` aims to bring simplicity, reusability, and clarity to research infrastructure — one well-structured task at a time. It is meant to support a concrete implementation of the [YODA principles](https://handbook.datalad.org/en/latest/basics/101-127-yoda.html).
 
 ## License
 
-MIT © Lune Bellec
+MIT © airoh contributors
