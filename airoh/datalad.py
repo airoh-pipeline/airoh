@@ -8,10 +8,31 @@ from pathlib import Path
 @task
 def get_data(c, name):
     """
-    Ensure a Datalad subdataset is installed and retrieved.
+    📦 Install and retrieve a Datalad subdataset defined in the Invoke configuration.
 
-    Parameters:
-        name (str): Name of the dataset as defined in invoke.yaml under 'datasets'.
+    This task ensures that a given Datalad dataset specified under the
+    `datasets` section of `invoke.yaml` is installed and that all of its
+    contents are retrieved. It is typically used to make sure local data
+    mirrors are up to date or to initialize subdatasets after cloning
+    a parent dataset.
+
+    Parameters
+    ----------
+    c : invoke.Context
+        The Invoke context, automatically provided when called as a task.
+    name : str
+        The name of the dataset as defined under `datasets` in `invoke.yaml`.
+
+    Raises
+    ------
+    ValueError
+        If the specified dataset name does not exist in the configuration.
+
+    Examples
+    --------
+    ```bash
+    inv datalad.get-data --name image10k
+    ```
     """
     datasets = c.config.get("datasets", {})
     if name not in datasets:
@@ -30,11 +51,28 @@ def get_data(c, name):
 
 @task
 def import_file(c, name):
-    """
-    Download a file using its name from invoke.yaml -> files.<name>.
+    """🌐 Download a single file tracked via Datalad.
 
-    Parameters:
-        name (str): Key from the 'files' section in invoke.yaml.
+    Finds an entry under the `files` section of `invoke.yaml`, downloads the file
+    if it doesn't already exist, and tracks it with Datalad.
+
+    Parameters
+    ----------
+    c : invoke.Context
+        The Invoke context (automatically provided when running as a task).
+    name : str
+        The file name key as defined under `files` in `invoke.yaml`.
+
+    Raises
+    ------
+    ValueError
+        If the file configuration is missing or incomplete.
+
+    Examples
+    --------
+    ```bash
+    inv datalad.import-file --name stimuli
+    ```
     """
     files = c.config.get("files", {})
     if name not in files:
@@ -57,15 +95,34 @@ def import_file(c, name):
 
 @task
 def import_archive(c, url, archive_name=None, target_dir=".", drop_archive=False):
-    """
-    Download a remote archive (e.g. from Zenodo or Figshare) and extract its content with Datalad.
+    """🗃️ Download and extract an archive via Datalad.
 
-    Parameters:
-        url (str): URL to the archive (e.g. .zip, .tar.gz). For Figshare-style links, explicitly provide
-                   `archive_name` if the URL does not end with the actual filename.
-        archive_name (str): Optional filename (default: basename of URL).
-        target_dir (str): Directory to extract into (default: current dir).
-        drop_archive (bool): Whether to drop the original archive from annex after extraction.
+    Retrieves a remote archive (e.g., from Zenodo or Figshare), extracts its contents
+    into the target directory, and optionally drops the original archive from the annex.
+
+    Parameters
+    ----------
+    c : invoke.Context
+        The Invoke context (automatically provided when running as a task).
+    url : str
+        The remote URL of the archive (e.g., `.zip`, `.tar.gz`).
+    archive_name : str, optional
+        Optional filename override. Defaults to the basename of the URL.
+    target_dir : str, optional
+        Directory to extract files into (default: current directory).
+    drop_archive : bool, optional
+        If True, drops the downloaded archive from the annex after extraction.
+
+    Notes
+    -----
+    Supported archive types: `.zip`, `.tar`, `.tar.gz`, `.tgz`, `.tar.bz2`, `.7z`.
+
+    Examples
+    --------
+    ```bash
+    inv datalad.import-archive --url https://zenodo.org/record/XXXX/files/data.zip
+    inv datalad.import-archive --url https://figshare.com/... --target-dir ./data --drop-archive
+    ```
     """
     archive_name = archive_name or os.path.basename(url)
     archive_path = os.path.join(target_dir, archive_name)

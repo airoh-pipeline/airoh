@@ -1,3 +1,4 @@
+pdoc>=16.0.0
 hatchling>=1.18
 invoke>=2.0
 pytest>=7.0

@@ -6,8 +6,29 @@ from invoke import task
 
 @task
 def setup_env_python(c, reqs="requirements.txt"):
-    """
-    Set up Python environment by installing from a requirements file.
+    """🐍 Set up a Python environment from a requirements file.
+
+    Installs dependencies listed in a requirements file using pip.
+    This is typically the first step in configuring a new development
+    environment for the project.
+
+    Parameters
+    ----------
+    c : invoke.Context
+        The Invoke context.
+    reqs : str, optional
+        Path to the requirements file (default: "requirements.txt").
+
+    Raises
+    ------
+    FileNotFoundError
+        If the requirements file cannot be found.
+
+    Examples
+    --------
+    ```bash
+    inv utils.setup-env-python
+    ```
     """
     if not os.path.exists(reqs):
         raise FileNotFoundError(f"⚠️ Requirements file not found: {reqs}")
@@ -16,27 +37,62 @@ def setup_env_python(c, reqs="requirements.txt"):
     c.run(f"pip install -r {reqs}")
 
 @task
-def ensure_submodule(c, path):
-    """
-    Ensure a git submodule is present and up to date.
+def ensure_submodule(c, path, recursive=True):
+    """🔄 Ensure a git submodule is initialized and up to date.
 
-        Parameters:
-            path (str): Path to the submodule directory 
+    Initializes or updates a specified git submodule recursively.
+
+    Parameters
+    ----------
+    c : invoke.Context
+        The Invoke context.
+    path : str
+        Path to the submodule directory.
+    recursive : boolean, default True
+        Update all submodules recursively
+
+    Examples
+    --------
+    ```bash
+    inv utils.ensure-submodule --path src/external-lib
+    ```
     """
+    if recursive:
+        flag_recursive = "--recursive"
+    else:
+        flag_recursive = ""
+
     if not os.path.exists(path) or not os.path.exists(os.path.join(path, ".git")):
         print(f"📦 Initializing submodule at {path}...")
-        c.run(f"git submodule update --init --recursive {path}")
+        c.run(f"git submodule update --init {flag_recursive} {path}")
     else:
         print(f"🔄 Updating submodule at {path}...")
         c.run(f"git submodule update --remote {path}")
 
 @task
 def install_local(c, path):
-    """
-    Install a local Python package in editable mode using pip.
+    """🔧 Install a local Python package in editable mode.
 
-    Parameters:
-        path (str): Path to the package directory
+    Performs a pip install with the `-e` flag, allowing live code
+    updates without reinstalling the package.
+
+    Parameters
+    ----------
+    c : invoke.Context
+        The Invoke context.
+    path : str
+        Path to the Python package directory.
+
+    Raises
+    ------
+    FileNotFoundError
+        If the given path does not exist.
+
+    Examples
+    --------
+    ```bash
+    inv utils.install-local --path src/my_module
+    ```
     """
     if not os.path.exists(path):
         raise FileNotFoundError(f"❌ Package path not found: {path}")
@@ -47,8 +103,22 @@ def install_local(c, path):
 
 @task
 def ensure_dir_exist(c, name):
-    """
-    Ensure the output_data_dir exists, create it if not.
+    """📁 Ensure a directory exists, creating it if needed.
+
+    Retrieves the directory path from the Invoke configuration and creates
+    it if it does not exist.
+
+    Parameters
+    ----------
+    c : invoke.Context
+        The Invoke context.
+    name : str
+        Key in invoke.yaml referring to a directory path.
+
+    Raises
+    ------
+    ValueError
+        If the provided key does not resolve to a string path.
     """
     output_dir = c.config.get(name)
     if not isinstance(output_dir, str):
@@ -63,13 +133,25 @@ def ensure_dir_exist(c, name):
 
 @task
 def clean_folder(c, name, pattern=None):
-    """
-    Remove files from a directory specified in invoke.yaml using a key.
+    """🧹 Clean files or directories from a given path.
 
-    Parameters:
-        name (str): Key in invoke.yaml whose value is the directory path.
-        pattern (str, optional): Glob pattern of files to delete (e.g., '*.png').
-                                 If not provided, the entire folder is removed.
+    Removes files or directories based on an invoke.yaml key.
+
+    Parameters
+    ----------
+    c : invoke.Context
+        The Invoke context.
+    name : str
+        Key in invoke.yaml whose value is the directory path.
+    pattern : str, optional
+        Glob pattern of files to delete (e.g., '*.png'). If not provided,
+        the entire folder will be removed.
+
+    Examples
+    --------
+    ```bash
+    inv utils.clean-folder --name output_data_dir --pattern '*.tmp'
+    ```
     """
     dir_name = c.config.get(name)
     if not isinstance(dir_name, str):
@@ -93,13 +175,27 @@ def clean_folder(c, name, pattern=None):
         print(f"💥 Removed {name} at {dir_name}")
 
 def _build_env_from_config(c, keys):
-    """
-    Construct an environment dictionary from a list of config keys.
+    """⚙️ Build an environment dictionary from Invoke config keys.
 
-    Each key will be resolved via `c.config.get(...)`, converted to an absolute path,
-    and inserted into the environment as an uppercased variable with underscores.
+    Converts selected keys from invoke.yaml into environment variables,
+    resolving them as absolute paths.
 
-    Example: ['source_data_dir'] → {'SOURCE_DATA_DIR': '/abs/path/to/source_data_dir'}
+    Parameters
+    ----------
+    c : invoke.Context
+        The Invoke context.
+    keys : list[str]
+        Keys to retrieve from configuration.
+
+    Returns
+    -------
+    dict
+        Environment dictionary with uppercase variable names.
+
+    Raises
+    ------
+    ValueError
+        If a key is missing from configuration.
     """
     env = dict(os.environ)
     for key in keys:
@@ -113,28 +209,32 @@ def _build_env_from_config(c, keys):
 
 @task
 def run_figures(c, notebooks_path=None, figures_base=None, keys=None):
-    """
-    📊 Run all Jupyter notebooks used to generate figures.
+    """📊 Execute all Jupyter notebooks generating figures.
 
-    This task scans the figure notebook directory and executes each notebook 
-    (unless its corresponding output folder already exists). It supports injecting 
-    config-defined paths into the notebook environment as environment variables.
+    Scans the figure notebook directory and executes each notebook that
+    doesn't yet have a corresponding output folder. Environment variables
+    can be injected based on invoke.yaml configuration.
 
-    Parameters:
-        notebooks_path (str, optional): Path to the folder containing notebooks. 
-            Defaults to the `notebooks_dir` value in invoke.yaml.
-        figures_base (str, optional): Base directory for outputs. 
-            Defaults to `figures_dir` in invoke.yaml.
-        keys (list of str, optional): List of invoke.yaml config keys to expose 
-            as environment variables (e.g., `["source_data_dir", "output_data_dir"]`). 
-            Will be converted to uppercase in the notebook (e.g., `SOURCE_DATA_DIR`).
+    Parameters
+    ----------
+    c : invoke.Context
+        The Invoke context.
+    notebooks_path : str, optional
+        Path to the folder containing notebooks. Defaults to `notebooks_dir`.
+    figures_base : str, optional
+        Base directory for figure outputs. Defaults to `figures_dir`.
+    keys : list[str], optional
+        List of configuration keys to expose as environment variables.
 
-    Example:
-        invoke run-figures
+    Examples
+    --------
+    ```bash
+    inv utils.run-figures
+    ```
     """
     notebooks_path = Path(notebooks_path or c.config.get("notebooks_dir", "code/figures"))
     figures_base = Path(figures_base or c.config.get("figures_dir", "output_data/Figures"))
-    
+
     env = None
     if keys:
         env = _build_env_from_config(c, keys)
