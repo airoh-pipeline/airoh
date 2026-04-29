@@ -208,10 +208,10 @@ def _build_env_from_config(c, keys):
     return env
 
 @task
-def run_figures(c, notebooks_path=None, figures_base=None, keys=None):
-    """📊 Execute all Jupyter notebooks generating figures.
+def run_notebooks(c, notebooks_path=None, figures_base=None, keys=None):
+    """📓 Execute all Jupyter notebooks in a directory.
 
-    Scans the figure notebook directory and executes each notebook that
+    Scans the notebooks directory and executes each notebook that
     doesn't yet have a corresponding output folder. Environment variables
     can be injected based on invoke.yaml configuration.
 
@@ -222,14 +222,14 @@ def run_figures(c, notebooks_path=None, figures_base=None, keys=None):
     notebooks_path : str, optional
         Path to the folder containing notebooks. Defaults to `notebooks_dir`.
     figures_base : str, optional
-        Base directory for figure outputs. Defaults to `figures_dir`.
+        Base directory for notebook outputs. Defaults to `figures_dir`.
     keys : list[str], optional
         List of configuration keys to expose as environment variables.
 
     Examples
     --------
     ```bash
-    inv utils.run-figures
+    inv utils.run-notebooks
     ```
     """
     notebooks_path = Path(notebooks_path or c.config.get("notebooks_dir", "code/figures"))

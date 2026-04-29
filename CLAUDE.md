@@ -42,7 +42,7 @@ twine upload dist/*
 
 The library has three modules, each corresponding to a domain:
 
-- **`airoh/utils.py`** — Python env setup, git submodules, editable installs, directory management, and Jupyter notebook execution (`run_figures`)
+- **`airoh/utils.py`** — Python env setup, git submodules, editable installs, directory management, and Jupyter notebook execution (`run_notebooks`)
 - **`airoh/containers.py`** — Docker and Apptainer lifecycle: build, archive to `.tar.gz`/`.sif`, download a prebuilt image, and run an `invoke` task inside a container
 - **`airoh/datalad.py`** — Data retrieval via Datalad: install/get subdatasets, download single tracked files, and download+extract remote archives
 
