@@ -24,13 +24,13 @@ You can use `airoh` in your project simply by importing tasks in your `tasks.py`
 
 ```python
 # tasks.py
-from airoh.utils import run_figures, setup_env_python
+from airoh.utils import run_notebooks, setup_env_python
 ```
 
 Now you can call:
 
 ```bash
-invoke run-figures
+invoke run-notebooks
 invoke setup-env-python
 ```
 ## Requirements
@@ -39,7 +39,7 @@ invoke setup-env-python
 * [`invoke`](https://www.pyinvoke.org/) ≥ 2.0
 * Docker (for container tasks)
 * Apptainer (optional, for `.sif` support)
-* `jupyter` (if using `run-figures`)
+* `jupyter` (if using `run-notebooks`)
 
 Note that a few more requirements are required for development, in particular [pdoc](https://pdoc.dev/docs/pdoc.html) which is used to generate the documentation website.
 
