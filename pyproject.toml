@@ -12,6 +12,10 @@ license = {text = "MIT"}
 requires-python = ">=3.8"
 dependencies = ["invoke>=2.0"]
 
+[project.optional-dependencies]
+datalad = ["datalad>=0.18"]
+full = ["datalad>=0.18"]
+
 [project.urls]
 Homepage = "https://github.com/simexp/airoh"
 Issues = "https://github.com/SIMEXP/airoh/issues"
