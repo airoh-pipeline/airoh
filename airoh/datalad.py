@@ -1,8 +1,15 @@
 # src/airoh/datalad.py
+import shutil
+
+if not shutil.which("datalad"):
+    raise ImportError(
+        "The 'datalad' CLI is required for airoh.datalad tasks. "
+        "Install it with: pip install airoh[datalad]"
+    )
+
 from invoke import task
 import os
 import shlex
-import shutil
 from pathlib import Path
 
 @task

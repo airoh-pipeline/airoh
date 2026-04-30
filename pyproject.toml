@@ -4,13 +4,17 @@ build-backend = "hatchling.build"
 
 [project]
 name = "airoh"
-version = "0.1.4"
+version = "0.2.0"
 description = "A lightweight task library for reproducible workflows"
 authors = [{ name = "Lune Bellec", email = "lune.bellec@umontreal.ca" }]
 readme = "README.md"
 license = {text = "MIT"}
 requires-python = ">=3.8"
 dependencies = ["invoke>=2.0"]
+
+[project.optional-dependencies]
+datalad = ["datalad>=0.18"]
+full = ["datalad>=0.18"]
 
 [project.urls]
 Homepage = "https://github.com/simexp/airoh"
