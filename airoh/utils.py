@@ -2,6 +2,7 @@
 import os
 import shutil
 from pathlib import Path
+from urllib.request import Request, urlopen
 from invoke import task
 
 @task
@@ -261,3 +262,94 @@ def run_notebooks(c, notebooks_path=None, figures_base=None, keys=None):
         c.run(f"jupyter nbconvert --to notebook --execute --inplace {nb}", env=env)
 
     print("🎉 All figure notebooks processed.")
+
+@task(
+    help={
+        "name": "Logical name of the file, as defined in the 'files' section of invoke.yaml."
+    }
+)
+def download_data(c, name):
+    """🌐 Download a single file from a URL using urllib.
+
+    Looks up the file entry by logical name in invoke.yaml under the `files`
+    key, then downloads it to the configured output path. Skips the download
+    if the output file already exists and is non-empty. Uses a `.part` temp
+    file during transfer and atomically replaces the target on success.
+
+    Parameters
+    ----------
+    c : invoke.Context
+        The Invoke context.
+    name : str
+        Logical name of the file to download, matching a key under `files`
+        in invoke.yaml. Each entry must define `url` and `output_file`.
+
+    Raises
+    ------
+    ValueError
+        If `name` is not found under `files` in invoke.yaml, or if the
+        matched entry is missing `url` or `output_file`.
+    RuntimeError
+        If the download completes with 0 bytes, or if any network error occurs.
+
+    Examples
+    --------
+    ```bash
+    inv utils.download-data --name my_dataset
+    ```
+    """
+    files = c.config.get("files", {})
+    if name not in files:
+        raise ValueError(f"❌ No file config found for '{name}' in invoke.yaml.")
+
+    entry = files[name]
+    url = entry.get("url")
+    output_file = entry.get("output_file")
+
+    if not url or not output_file:
+        raise ValueError(
+            f"❌ Entry for '{name}' must define both 'url' and 'output_file'."
+        )
+
+    output_path = Path(output_file)
+    tmp_path = output_path.with_suffix(output_path.suffix + ".part")
+
+    if output_path.exists() and output_path.stat().st_size > 0:
+        print(f"🫧 Skipping {name}: {output_file} already exists.")
+        return
+
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    tmp_path.unlink(missing_ok=True)
+
+    print(f"📥 Downloading '{name}' from {url}")
+    print(f"📁 Target: {output_file}")
+
+    req = Request(
+        url,
+        headers={
+            "User-Agent": "Mozilla/5.0",
+            "Accept": "*/*",
+        },
+    )
+
+    try:
+        with urlopen(req, timeout=60) as response, tmp_path.open("wb") as f:
+            total = 0
+            while True:
+                chunk = response.read(8192)
+                if not chunk:
+                    break
+                f.write(chunk)
+                total += len(chunk)
+
+        if total == 0:
+            tmp_path.unlink(missing_ok=True)
+            raise RuntimeError(f"❌ Downloaded 0 bytes for '{name}'.")
+
+        tmp_path.replace(output_path)
+
+    except Exception as e:
+        tmp_path.unlink(missing_ok=True)
+        raise RuntimeError(f"❌ Failed to download '{name}' from {url}: {e}") from e
+
+    print(f"✅ Downloaded {name} to {output_file} ({output_path.stat().st_size} bytes)")
