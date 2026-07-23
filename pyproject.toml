@@ -17,8 +17,8 @@ datalad = ["datalad>=0.18"]
 full = ["datalad>=0.18"]
 
 [project.urls]
-Homepage = "https://github.com/simexp/airoh"
-Issues = "https://github.com/SIMEXP/airoh/issues"
+Homepage = "https://github.com/airoh-pipeline/airoh"
+Issues = "https://github.com/airoh-pipeline/airoh/issues"
 
 [tool.ruff]
 line-length = 100

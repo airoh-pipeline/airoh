@@ -30,7 +30,12 @@ Build documentation locally:
 invoke make-docs
 ```
 
-Build and publish the package:
+Release a new version (publishes to PyPI via CI using Trusted Publishing):
+1. Bump `version` in `pyproject.toml`.
+2. Tag the commit `vX.Y.Z` and push the tag.
+3. Publish a GitHub Release for that tag — this triggers `.github/workflows/publish.yml`, which builds the package and uploads it to PyPI via OIDC (no stored token).
+
+Manual fallback (local `~/.pypirc` token required):
 ```bash
 hatch build
 twine upload dist/*
