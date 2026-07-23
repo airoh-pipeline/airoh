@@ -11,7 +11,7 @@ pip install airoh
 For local deployment:
 
 ```bash
-git clone https://github.com/simexp/airoh.git
+git clone https://github.com/airoh-pipeline/airoh.git
 cd airoh
 pip install -e .
 ```
