@@ -7,10 +7,15 @@ if not shutil.which("datalad"):
         "Install it with: pip install airoh[datalad]"
     )
 
-from invoke import task
-import os
-import shlex
-from pathlib import Path
+# The rest of the imports stay below the guard so a missing datalad CLI raises
+# the message above rather than failing on some unrelated import first. isort
+# leaves them here — it never reorders across an intervening statement.
+import os  # noqa: E402
+import shlex  # noqa: E402
+from pathlib import Path  # noqa: E402
+
+from invoke import task  # noqa: E402
+
 
 @task
 def get_data(c, name):
@@ -142,7 +147,10 @@ def import_archive(c, url, archive_name=None, target_dir=".", drop_archive=False
         return
 
     print(f"📦 Extracting archive content into {target_dir}...")
-    c.run(f"datalad add-archive-content --delete --extract {shlex.quote(archive_path)} -d {shlex.quote(target_dir)}")
+    c.run(
+        f"datalad add-archive-content --delete --extract "
+        f"{shlex.quote(archive_path)} -d {shlex.quote(target_dir)}"
+    )
 
     if drop_archive:
         print(f"🧹 Dropping archive from annex: {archive_path}")

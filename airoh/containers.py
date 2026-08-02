@@ -1,10 +1,12 @@
 # src/airoh/containers.py
+import gzip
 import os
 import shutil
 import tempfile
-import gzip
 from pathlib import Path
+
 from invoke import task
+
 
 def _set_image(c, image=None):
     """🧩 Resolve the Docker image name.
@@ -31,7 +33,10 @@ def _set_image(c, image=None):
     """
     image = image or c.config.get("docker_image")
     if not image:
-        raise ValueError("No Docker image specified. Please set docker_image in invoke.yaml or pass it explicitly.")
+        raise ValueError(
+            "No Docker image specified. Please set docker_image in invoke.yaml "
+            "or pass it explicitly."
+        )
     return image
 
 @task
@@ -113,7 +118,9 @@ def docker_setup(c, url=None, image=None):
     if not url:
         url = c.config.get("docker_archive")
         if not url:
-            raise ValueError("No archive URL provided. Set docker_archive in invoke.yaml or pass --url.")
+            raise ValueError(
+                "No archive URL provided. Set docker_archive in invoke.yaml or pass --url."
+            )
 
     output = f"{image}.tar.gz"
     if not os.path.exists(output):

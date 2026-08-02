@@ -1,5 +1,6 @@
 from invoke import task
 
+
 @task
 def make_docs(c, url_logo=None):
     if not url_logo:
