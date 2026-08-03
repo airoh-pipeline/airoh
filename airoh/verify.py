@@ -70,7 +70,9 @@ _PROVENANCE_NAMES = ("MANIFEST.json", "PROVENANCE.json")
 # Keys airoh's own tasks read straight from the config, so a project's tasks.py
 # never mentions them and they must not be reported as unused.
 AIROH_CONFIG_KEYS = {"files", "datasets", "verify", "manifest_file",
-                     "provenance_file", "provenance_hash_max_bytes"}
+                     "provenance_file", "provenance_hash_max_bytes",
+                     "output_data_dir", "source_data_dir", "notebooks_dir",
+                     "figures_dir", "docker_image", "docker_archive"}
 
 
 def _ok(check, message):
@@ -335,7 +337,11 @@ def _conda_dependencies(path):
         stripped = line.strip()
         if not in_dependencies or not stripped.startswith("- "):
             continue
-        candidate = requirement_name(stripped[2:].rstrip(":"))
+        item = stripped[2:].rstrip(":")
+        if item.startswith("-"):
+            # A pip flag (`-e .`, `-r requirements.txt`), not a package.
+            continue
+        candidate = requirement_name(item)
         if candidate and candidate not in ("pip", "python"):
             names.add(candidate)
     return names

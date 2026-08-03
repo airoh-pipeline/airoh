@@ -154,6 +154,17 @@ def test_dependencies_skip_with_one_file(project):
     assert check_dependencies(make(project)).status == SKIP
 
 
+def test_dependencies_ignore_pip_flags_in_conda_env(project):
+    (project / "pyproject.toml").write_text(
+        '[project]\ndependencies = ["numpy"]\n')
+    (project / "environment.yml").write_text(
+        "dependencies:\n  - python=3.12\n  - numpy\n  - pip\n  - pip:\n"
+        "    - -e .\n    - -r requirements.txt\n")
+    finding = check_dependencies(make(project))
+    assert finding.status == PASS
+    assert not any(detail.startswith("-") for detail in finding.details)
+
+
 def test_doc_paths_pass_for_existing_paths(project):
     (project / "CLAUDE.md").write_text("See `tasks.py` and `invoke.yaml`.\n")
     assert check_doc_paths(make(project)).status == PASS
