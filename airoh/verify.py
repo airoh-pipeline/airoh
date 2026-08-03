@@ -69,7 +69,7 @@ _PROVENANCE_NAMES = ("MANIFEST.json", "PROVENANCE.json")
 
 # Keys airoh's own tasks read straight from the config, so a project's tasks.py
 # never mentions them and they must not be reported as unused.
-AIROH_CONFIG_KEYS = {"files", "datasets", "verify", "manifest_file",
+AIROH_CONFIG_KEYS = {"files", "datasets", "figures", "verify", "manifest_file",
                      "provenance_file", "provenance_hash_max_bytes",
                      "output_data_dir", "source_data_dir", "notebooks_dir",
                      "figures_dir", "docker_image", "docker_archive"}
