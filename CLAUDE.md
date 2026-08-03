@@ -45,13 +45,16 @@ twine upload dist/*
 
 `airoh` is a library of reusable [`invoke`](https://www.pyinvoke.org/) task definitions for reproducible research pipelines. Users import tasks from `airoh` into their project's `tasks.py` and call them via `invoke <module>.<task-name>`.
 
-The library has three modules, each corresponding to a domain:
+The library has six modules, each corresponding to a domain:
 
 - **`airoh/utils.py`** — Python env setup, git submodules, editable installs, directory management, and Jupyter notebook execution (`run_notebooks`)
 - **`airoh/containers.py`** — Docker and Apptainer lifecycle: build, archive to `.tar.gz`/`.sif`, download a prebuilt image, and run an `invoke` task inside a container
-- **`airoh/datalad.py`** — Data retrieval via Datalad: install/get subdatasets, download single tracked files, and download+extract remote archives
+- **`airoh/acquisition.py`** — dependency-light data acquisition: download a single file (`download_data`), symlink/copy already-present data or fall back to downloading (`fetch_data`), and git submodule init/update (`ensure_submodule`)
+- **`airoh/datalad.py`** — Datalad-backed data retrieval, gated behind the optional `datalad` extra: make a dataset checkout available (`ensure_dataset`/`install_dataset`), retrieve content tolerant of partial failures (`datalad_get`/`get_data`), install/update nested subdatasets (`install_subdataset`/`update_subdataset`/`update_dataset`), a failure cache so repeat fetches skip known-inaccessible files (`load_known_failures`/`save_known_failures`), a generic glob-and-fetch helper for projects to compose their own prefetch step (`prefetch_pattern`), and single tracked-file download (`import_file`). Import always succeeds without the `datalad` CLI on PATH — only calling a task raises.
+- **`airoh/provenance.py`** — records what fetch and run actually did: `record_sources` writes `source_data/MANIFEST.json`, `record_run` writes `output_data/PROVENANCE.json`, both checksummed and git/datalad-aware
+- **`airoh/verify.py`** — `invoke verify`: a flat list of independent checks that code, config, data and docs still agree (task list vs. docs, dependency files vs. each other, doc paths, `CONTENT.md` coverage, config keys, tracked file sizes, provenance freshness, lint)
 
-**Configuration contract**: every task reads project-specific values from the consumer project's `invoke.yaml` via `c.config.get(key)`. Key names used across modules: `docker_image`, `docker_archive`, `datasets` (dict), `files` (dict with `url`/`output_file`), `notebooks_dir`, `figures_dir`. Tasks raise `ValueError` if a required key is missing.
+**Configuration contract**: every task reads project-specific values from the consumer project's `invoke.yaml` via `c.config.get(key)`. Key names used across modules: `docker_image`, `docker_archive`, `datasets` (dict, either `{name: path}` or `{name: {output_dir, url, source}}`), `files` (dict with `url`/`output_file`), `notebooks_dir`, `figures_dir`, `output_data_dir`, `source_data_dir`, `verify`, `manifest_file`, `provenance_file`, `provenance_hash_max_bytes`. Tasks raise `ValueError` if a required key is missing. `airoh/verify.py`'s `AIROH_CONFIG_KEYS` must list every key read this way, or `check_config_keys` reports it as an unused project key.
 
 **Container run tasks** (`docker_run`, `apptainer_run`) mount the current working directory into the container at `/home/jovyan/work` and execute an `invoke` task inside it — enabling fully containerized pipeline steps while keeping task definitions in the host `tasks.py`.
 
@@ -59,4 +62,4 @@ The library has three modules, each corresponding to a domain:
 
 **The `tasks.py`** at the repo root defines only `make-docs` — it is the library's own build task, not an example for users.
 
-**Testing** uses a single integration smoke test (`tests/test_airoh_template_smoke.py`) that clones the `airoh-template` repo (URL from `invoke.yaml`), installs the local `airoh` editable, and runs `invoke setup`, `invoke fetch`, `invoke run` end-to-end.
+**Testing** uses a single integration smoke test (`tests/test_airoh_template_smoke.py`) that clones the `airoh-template` repo (URL from `invoke.yaml`), installs the local `airoh` editable, and runs `invoke fetch`, `invoke run`, `invoke verify` end-to-end (there is no `invoke setup` task).

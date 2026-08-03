@@ -33,6 +33,35 @@ Now you can call:
 invoke run-notebooks
 invoke setup-env-python
 ```
+
+### Keeping a project honest
+
+Two modules exist for the parts of reproducibility that no pipeline run can
+check by itself.
+
+`airoh.verify` compares a project against its own documentation — the task list
+in the README, the packages in `requirements.txt` versus `pyproject.toml`, the
+paths the docs name, the entries in each data folder versus its `CONTENT.md`,
+the size and type of what git tracks. It runs a flat list of independent checks
+and exits non-zero when any fails. Wire it up as its own task and run it before
+committing; never call it from `run`, so that reproducing results never depends
+on documentation hygiene.
+
+`airoh.provenance` writes two records: `record_sources` describes what every
+declared asset actually resolved to (a URL, a real path behind a symlink, the
+commit of the repository it belongs to), and `record_run` describes what
+produced the current outputs (project commit, environment, input manifest,
+output checksums). Neither can fail a pipeline — a provenance record is
+documentation, not a precondition. Where datalad is in use it remains the only
+thing that can *retrieve* a past state; these records are what you get without
+it.
+
+```python
+# tasks.py
+from airoh.verify import verify            # noqa: F401  (exposes `invoke verify`)
+from airoh.provenance import record_run, record_sources
+```
+
 ## Requirements
 
 * Python ≥ 3.8
