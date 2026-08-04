@@ -1,0 +1,28 @@
+name: CI
+
+# run lint and unit tests on every push and pull request
+on: [push, pull_request]
+
+# security: restrict permissions for CI jobs.
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.8', '3.12']
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - run: pip install -e .
+      - run: pip install -r requirements_dev.txt
+
+      - run: ruff check airoh/
+      - run: pytest -m "not integration"
