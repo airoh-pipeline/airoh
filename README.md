@@ -62,6 +62,23 @@ from airoh.verify import verify            # noqa: F401  (exposes `invoke verify
 from airoh.provenance import record_run, record_sources
 ```
 
+### The Inkscape montage pattern
+
+`airoh.figures` solves a problem every multi-panel-figure pipeline has: the
+layout is authored by hand in Inkscape, but the panels are rendered by
+matplotlib, and the two disagree about size. The montage SVG is the single
+source of truth for layout — `figure_layout` reads out the box each linked
+panel is placed in and writes it to `panel_sizes.json`, then a notebook calls
+`panel_size(name, default)` to render that panel at exactly the size it will
+be placed at, so text is never stretched. `compose_figure` renders the montage
+to PNG/PDF/SVG/EPS via Inkscape, an optional system binary — a missing one
+warns and skips the export rather than failing the run.
+
+```python
+# tasks.py
+from airoh.figures import clean_figure, compose_figure, figure_layout
+```
+
 ## Requirements
 
 * Python ≥ 3.8
@@ -69,6 +86,7 @@ from airoh.provenance import record_run, record_sources
 * Docker (for container tasks)
 * Apptainer (optional, for `.sif` support)
 * `jupyter` (if using `run-notebooks`)
+* Inkscape (optional, only for `compose-figure`)
 
 Note that a few more requirements are required for development, in particular [pdoc](https://pdoc.dev/docs/pdoc.html) which is used to generate the documentation website.
 
